@@ -40,6 +40,7 @@ from datetime import datetime
 # 69.35 x 94.35
 # Taking the 6.35mm we added to the 63mm, we can find that we are effectively adding 10% width
 # However what I failed to see in the previous attmept is that we are only adding 7.2% height
+# Also want to add support for other colored borders
 
 
 # I'm trying snake_case for this so my linter will stop yelling at me :<
