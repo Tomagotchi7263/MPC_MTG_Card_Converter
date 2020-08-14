@@ -35,13 +35,21 @@ from datetime import datetime
 def main():
     now = datetime.now()
     in_path = "./resources/in/"
+    out_folder = "./resources/out/"
     out_path = "./resources/out/" + now.strftime("%Y-%m-%d") + "/"
+
+    if not isdir(in_path):
+        mkdir(in_path)
+
+    if not isdir(out_folder):
+        mkdir(out_folder)
 
     if not isdir(out_path):
         mkdir(out_path)
 
     files = [f for f in listdir(in_path) if isfile(join(in_path, f))]
     numCount = 0
+    
     for my_file in files:
         to_mpc(in_path + my_file, my_file, out_path)
         numCount += 1
