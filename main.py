@@ -71,16 +71,39 @@ def main():
 def to_mpc(image_path, image_name, out_path):
     frame = Image.open(image_path)
     bleed = Image.open('./resources/bleed.png')
-    # Percentage to account for bleed. 1.10 = 10%
+    # Percentage to account for bleed.
     horiz_bleed_acct = 1.100
     verti_bleed_acct = 1.072
+    # I dont really remember what these do, but they seem to work so I'm leaving them be
     rect_acct = 0.0363
     horiz_acct = 0.0454
     verti_acct = 0.0326
 
+    # Get our card image size
     card_x, card_y = frame.size
+    # Resize the bleed iamge to match the size we need for the base card image.
     new_bleed = bleed.resize((round_half_up(card_x * horiz_bleed_acct), round_half_up(card_y * verti_bleed_acct)))
     total_x, total_y = new_bleed.size
+
+    # Find out what the border color is
+    border_color = (0, 0, 0)
+    border_read_coord = (math.floor(card_x / 2), 10)
+    border_source = frame.getpixel(border_read_coord)
+    # we gotta get rid of that 4th transparency value since its not needed.
+    border_source_new = (border_source[0], border_source[1], border_source[2])
+    # JPGs dont have the 4th value which I'm assuming is transparency. Just yeet them out of here
+    #if len(border_source) < 4:
+    #    print("Please only use .png images when using this. Will default to black borders for anything else.")
+    # If the border isnt (0, 0, 0, 255), jsut grab whatever value the border is.
+    if (border_source_new != border_color):
+        print("Border color found was different to RGB(0, 0, 0).")
+        print("Changing to RGB(%i, %i, %i)." % border_source_new)
+        border_color = border_source_new
+        # Draw a rectangle over the bleed to replace the black color
+        replacement = Image.new('RGB', (total_x, total_y), border_color)
+        new_bleed.paste(replacement, (0, 0))
+
+
 
     #edgeAllowX = round_half_up(round_half_up(total_x - card_x) / 2)
     #edgeAllowY = round_half_up(round_half_up(total_y - card_y) / 2)
@@ -94,10 +117,10 @@ def to_mpc(image_path, image_name, out_path):
     verti_bot_y = total_y - (verti_top_y + rect_dim_y)
 
     new_bleed.paste(frame, (horiz_left_x, verti_top_y))
-    new_bleed = cover_corner(new_bleed, horiz_left_x, verti_top_y, rect_dim_x, rect_dim_y) # cover top left corner
-    new_bleed = cover_corner(new_bleed, horiz_right_x, verti_top_y, rect_dim_x, rect_dim_y) # cover top right corner
-    new_bleed = cover_corner(new_bleed, horiz_left_x, verti_bot_y, rect_dim_x, rect_dim_y) # cover bottom left corner
-    new_bleed = cover_corner(new_bleed, horiz_right_x, verti_bot_y, rect_dim_x, rect_dim_y) # cover bottom right corner
+    new_bleed = cover_corner(new_bleed, horiz_left_x, verti_top_y, rect_dim_x, rect_dim_y, border_color) # cover top left corner
+    new_bleed = cover_corner(new_bleed, horiz_right_x, verti_top_y, rect_dim_x, rect_dim_y, border_color) # cover top right corner
+    new_bleed = cover_corner(new_bleed, horiz_left_x, verti_bot_y, rect_dim_x, rect_dim_y, border_color) # cover bottom left corner
+    new_bleed = cover_corner(new_bleed, horiz_right_x, verti_bot_y, rect_dim_x, rect_dim_y, border_color) # cover bottom right corner
     
     # logic from my portolio site's version of this
     # out_path = image_path.replace(".png", "_mpc.png")
@@ -108,8 +131,8 @@ def to_mpc(image_path, image_name, out_path):
     new_bleed.save(out_path + new_image_name)
     remove(image_path)
 
-def cover_corner(image, x_c, y_c, rect_size_x, rect_size_y):
-    black = Image.new('RGB', (rect_size_x, rect_size_y), "black")
+def cover_corner(image, x_c, y_c, rect_size_x, rect_size_y, color):
+    black = Image.new('RGB', (rect_size_x, rect_size_y), color)
     image.paste(black, (x_c, y_c))
     return image
 
